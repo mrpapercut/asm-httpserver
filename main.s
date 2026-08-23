@@ -12,6 +12,7 @@ _start:
     call bind
 
     call listen     # socket fd should still be in rdi
+    call accept     # socket fd should still be in rdi
 
     mov rdi, 0  # exit code
     call exit
@@ -45,6 +46,15 @@ listen:
     mov rax, 50     # syscall 'listen'
     #; mov rdi,     # file descriptor, should still be in rdi
     mov rsi, 0     # backlog -> max num of queued connections
+    syscall
+
+    ret
+
+accept:
+    mov rax, 43
+    #; mov rdi,     # file descriptor, should still be in rdi
+    mov rsi, 0
+    mov rdx, 0
     syscall
 
     ret
