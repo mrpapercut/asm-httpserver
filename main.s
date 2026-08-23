@@ -1,7 +1,11 @@
 .intel_syntax noprefix
 
-.section .text
+.section .rodata
+http_response:
+    .asciz "HTTP/1.0 200 OK\r\n\r\n"
 
+
+.text
 .global _start
 .type _start, @function
 
@@ -13,6 +17,12 @@ _start:
 
     call listen     # socket fd should still be in rdi
     call accept     # socket fd should still be in rdi
+
+    # rax contains fd for accepted socket
+    mov rdi, rax
+    call read_request
+    call write_response
+    call close_request
 
     mov rdi, 0  # exit code
     call exit
@@ -51,10 +61,37 @@ listen:
     ret
 
 accept:
-    mov rax, 43
+    mov rax, 43     # syscall 'accept'
     #; mov rdi,     # file descriptor, should still be in rdi
-    mov rsi, 0
-    mov rdx, 0
+    mov rsi, 0      # NULL
+    mov rdx, 0      # NULL
+    syscall
+
+    ret
+
+read_request:
+    mov rax, 0      # syscall 'read'
+    #; mov rdi,     # file descriptor, should still be in rdi
+    sub rsp, 256    # create stack space for buffer
+    mov rsi, rsp    # buffer
+    mov rdx, 256    # length
+    syscall
+
+    add rsp, 256    # realign stack pointer
+
+    ret
+
+write_response:
+    mov rax, 1      # syscall 'write'
+    lea rsi, [rip + http_response]    # buffer
+    mov rdx, 19     # length
+    syscall
+
+    ret
+
+close_request:
+    mov rax, 3      # syscall 'close'
+    #; mov rdi,     # file descriptor, should still be in rdi
     syscall
 
     ret
