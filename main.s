@@ -11,6 +11,8 @@ _start:
     mov rdi, rax    # socket fd in rax, needed in rdi for bind
     call bind
 
+    call listen     # socket fd should still be in rdi
+
     mov rdi, 0  # exit code
     call exit
 
@@ -36,5 +38,13 @@ bind:
     syscall
 
     add rsp, 16     # Realign stack
+
+    ret
+
+listen:
+    mov rax, 50     # syscall 'listen'
+    #; mov rdi,     # file descriptor, should still be in rdi
+    mov rsi, 0     # backlog -> max num of queued connections
+    syscall
 
     ret
