@@ -19,13 +19,30 @@ connect_loop:
     call accept
 
     # rax contains fd for accepted connection
-    mov rdi, rax
+    mov r14, rax
+
+    mov rax, 57     # syscall 'fork'
+    syscall
+
+    test rax, rax   # if rax is zero, this is the child process
+    jnz parent_process
+
+    # close socket for client
+    mov rax, 3
+    mov rdi, r15
+    syscall
+
+    mov rdi, r14
     call handle_socket
 
-    jmp connect_loop
+    call exit_success
 
-    mov rdi, 0  # exit code
-    call exit
+parent_process:
+    mov rax, 3
+    mov rdi, r14
+    syscall
+
+    jmp connect_loop
 
 create_socket:
     mov rax, 41 # syscall 'socket'
